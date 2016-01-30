@@ -40,7 +40,7 @@ void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 void asm_end_app(void);
 void asm_hdd(void);
 void test_hdd(int flg, int in1,int in2,void* in3);
-void stop_hdd(int status);
+void stop_hdd();
 void asm_end_hdd(void);
 
 /* fifo.c */
@@ -200,6 +200,7 @@ void timer_free(struct TIMER *timer);
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
+int catch_time();
 
 /* mtask.c */
 #define MAX_TASKS		1000	/* ?�???X?N?? */
@@ -260,13 +261,17 @@ void task_remove(struct TASK *task);
 void task_sleep(struct TASK *task,int flag);
 void task_clean(struct TASK *task);
 struct TASK *task_b_make(int i);
+struct TASK *task_c_make(int i);
+struct TASK *task_make_test(int i);
 void task_exit();
 void task_b_main(struct SHEET *sht_win_b, int num);
+void task_c_main(struct SHEET *sht_win_b, int num);
+void task_main_test(int i);
 void app_main(int esp);
 void task_hdd_main(int flg, int in1,int in2,void* in3);
 void start_hdd(int flg, int in1,int in2,void* in3);
-void end_hdd(int status);
-int catch_hdd(int flg, int in1, int in2, void* in3);
+void end_hdd(void);
+void catch_hdd(int flg, int in1, int in2, void* in3);
 void sys_exit(void);
 void sys_sleep(int in);
 int sys_getpid(void);

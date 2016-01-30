@@ -256,56 +256,51 @@ _farcall:		; void farcall(int eip, int cs);
 		RET
 
 _test_hdd:	; void test_hdd(int flg,int in1,int in2,void* in3);
-				PUSH	EDI
-				PUSH	ESI
-				PUSH	EBX
-				PUSH	EAX
-				MOV		EBX,[ESP+20]	; flg
-				MOV		ESI,[ESP+24]	; in1
-				MOV		EDI,[ESP+28]	; in2
-				MOV		EAX,[ESP+32]	; in3
-				INT		0x41
-				POP		EAX
-				POP		EBX
-				POP		ESI
-				POP		EDI
-				RET
+	  PUSH	EDI
+		PUSH	ESI
+		PUSH	EBX
+		PUSH	EAX
+		MOV		EBX,[ESP+20]	; flg
+		MOV		ESI,[ESP+24]	; in1
+		MOV		EDI,[ESP+28]	; in2
+		MOV		EAX,[ESP+32]	; in3
+		INT		0x41
+		POP		EAX
+		POP		EBX
+		POP		ESI
+		POP		EDI
+		RET
 
-		_asm_hdd:
-				STI
-				PUSH DS
-				PUSH ES
-				PUSHAD
-				PUSH EAX
-				PUSH EDI
-				PUSH ESI
-				PUSH EBX
-				CALL _catch_hdd
-				ADD ESP,16
-				POPAD
-				POP ES
-				POP DS
-				IRETD
+_asm_hdd:
+		STI
+		PUSH DS
+		PUSH ES
+		PUSHAD
+		PUSH EAX
+		PUSH EDI
+		PUSH ESI
+		PUSH EBX
+		CALL _catch_hdd
+		ADD ESP,16
+		POPAD
+		POP ES
+		POP DS
+		IRETD
 
-		_stop_hdd: ;(int status)
-				PUSH EDI
-				MOV EDI,[ESP+8]
-				INT 0x42
-				POP EDI
-				RET
+_stop_hdd: ;(int status)
+		INT 0x42
+		RET
 
-		_asm_end_hdd:
-				STI
-				PUSH DS
-				PUSH ES
-				PUSHAD
-				PUSH EDI
-				CALL _end_hdd
-				ADD ESP,4
-				POPAD
-				POP ES
-				POP DS
-				IRETD
+_asm_end_hdd:
+		STI
+		PUSH DS
+		PUSH ES
+		PUSHAD
+		CALL _end_hdd
+		POPAD
+		POP ES
+		POP DS
+		IRETD
 
 _asm_hrb_api:
 		STI
@@ -317,7 +312,7 @@ _asm_hrb_api:
 		MOV		DS,AX		; OS?p??Z?O?????g??DS??ES?????????
 		MOV		ES,AX
 		CALL	_hrb_api
-		CMP		EAX,0	
+		CMP		EAX,0
 		JNE		end_app
 		ADD		ESP,32
 		POPAD

@@ -3,7 +3,7 @@
 #include "bootpack.h"
 #include <stdio.h>
 #include <string.h>
-extern struct SHEET *sht_win_b[5];
+extern struct SHEET *sht_win_b[5],*sht_win_c[2];
 extern struct TASKCTL *taskctl;
 FileDescriptor *common_fd;
 FileDescriptor *pwd_fd;
@@ -223,6 +223,16 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_cd(cons, cmdline);
 	} else if (strncmp(cmdline, "mkdir ", 6) == 0) {
 		cmd_mkdir(cons, cmdline);
+	} else if (strcmp(cmdline, "task_init_test") == 0) {
+		int MAX= 1000,i;
+		int start,end;
+		start = catch_time();
+		for(i=3;i<MAX;i++){
+			task_make_test(i);
+		}
+		end = catch_time();
+		sprintf(s,"time:%d\n",end-start);
+		cons_putstr0(cons,s);
 	} else if (cmdline[0] != 0) {
 		if (cmd_app(cons, fat, cmdline) == 0) {
 			cons_putstr0(cons, "Bad command.\n");
@@ -464,8 +474,11 @@ void cmd_run(struct CONSOLE *cons,int in){
 		}
 	}
 	if(in>=3 && in<=7){
-		task_run(task_b_make(in), 2, 1);
+		task_run(task_b_make(in), 2, 2);
 		sheet_updown(sht_win_b[in-3], 1);
+	}else if(in == 10 || in == 20 ){
+		task_run(task_c_make(in), 2, 2);
+		sheet_updown(sht_win_c[(in/10)-1], 1);
 	}else{
 		sprintf(s,"you can't run pid:%d\n",in);
 		cons_putstr0(cons, s);
@@ -487,7 +500,17 @@ void cmd_kill(struct CONSOLE *cons,int in){
 				sprintf(s, "task_b pid:%d", in);
 				make_window8(sht_win_b[in-3]->buf, 344, 52, s, 0);
 				sheet_updown(sht_win_b[in-3], -1);
+			}else if (in == 10 || in == 20){
+				sprintf(s, "killed pid:%d\n",in);
+				cons_putstr0(cons, s);
+				sprintf(s, "task_c");
+				make_window8(sht_win_c[(in/10)-1]->buf, 344, 52, s, 0);
+				sheet_updown(sht_win_c[(in/10)-1], -1);
+					task_clean(&taskctl->tasks0[i]);
+				return ;
 			}
+			sprintf(s,"killed pid:%d\n",in);
+			cons_putstr0(cons, s);
 			task_clean(&taskctl->tasks0[i]);
 			return;
 		}
@@ -719,6 +742,7 @@ void app_main(int esp){
 	struct CONSOLE *cons = (struct CONSOLE *) *((int *) 0x0fec);
 	start_app(0x1b, 1003 * 8, esp, 1004 * 8,&(task->tss.esp0));
 	cons_newline(cons);
+	cons_putstr0(cons,">");
 	task_exit();
 }
 

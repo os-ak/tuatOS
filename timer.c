@@ -144,3 +144,7 @@ void ide_wait_10milsec(unsigned int timeout){
 	}
 	return;
 }
+
+int catch_time(){
+	return timerctl.count;
+}

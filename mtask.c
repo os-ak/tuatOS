@@ -1,10 +1,12 @@
-/* ?ï¿½ï¿½}?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½`?ï¿½ï¿½^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½ÖŒW */
+/* ??¿½?¿½}??¿½?¿½??¿½?¿½??¿½?¿½`??¿½?¿½^??¿½?¿½X??¿½?¿½N??¿½?¿½ÖŒW */
 
 #include "bootpack.h"
+#include <stdio.h>
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
 extern struct SHEET *sht_win_b[5],*sht_back;
+int switch_count;
 
 struct TASK *task_now(void)
 {
@@ -18,7 +20,7 @@ void task_add(struct TASK *task)
 	tl->tasks[tl->running] = task;
 	taskctl->now_tasks++;
 	tl->running++;
-	task->flags = TASK_RUNNING; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+	task->flags = TASK_RUNNING; /* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½ */
 	return;
 }
 
@@ -51,11 +53,11 @@ struct TASK *task_init(struct MEMMAN *memman)
 	task = task_alloc();
 	task->pid = 1;
 	task->name = "OS";
-	task->flags = TASK_RUNNING;	/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½}?ï¿½ï¿½[?ï¿½ï¿½N */
-	task->priority = 2; /* 0.02?ï¿½ï¿½b */
-	task->level = 0;	/* ?ï¿½ï¿½Åï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½ */
+	task->flags = TASK_RUNNING;	/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½}??¿½?¿½[??¿½?¿½N */
+	task->priority = 2; /* 0.02??¿½?¿½b */
+	task->level = 0;	/* ??¿½?¿½Åï¿½??¿½?¿½??¿½?¿½??¿½?¿½x??¿½?¿½??¿½?¿½ */
 	task_add(task);
-	task_switchsub();	/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½İ’ï¿½ */
+	task_switchsub();	/* ??¿½?¿½??¿½?¿½??¿½?¿½x??¿½?¿½??¿½?¿½??¿½?¿½İ’ï¿½ */
 	load_tr(task->sel);
 	task_timer = timer_alloc();
 	timer_settime(task_timer, task->priority);
@@ -83,9 +85,9 @@ struct TASK *task_alloc(void)
 	for (i = 0; i < MAX_TASKS; i++) {
 		if (taskctl->tasks0[i].flags == TASK_NONUSE) {
 			task = &taskctl->tasks0[i];
-			task->flags = TASK_SETTING; /* ?ï¿½ï¿½g?ï¿½ï¿½p?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½}?ï¿½ï¿½[?ï¿½ï¿½N */
+			task->flags = TASK_SETTING; /* ??¿½?¿½g??¿½?¿½p??¿½?¿½??¿½?¿½??¿½?¿½}??¿½?¿½[??¿½?¿½N */
 			task->tss.eflags = 0x00000202; /* IF = 1; */
-			task->tss.eax = 0; /* ?ï¿½ï¿½Æ‚è‚ ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½0?ï¿½ï¿½É‚ï¿½?ï¿½ï¿½Ä‚ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Æ‚É‚ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+			task->tss.eax = 0; /* ??¿½?¿½Æ‚è‚ ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½0??¿½?¿½É‚ï¿½??¿½?¿½Ä‚ï¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Æ‚É‚ï¿½??¿½?¿½??¿½?¿½ */
 			task->tss.ecx = 0;
 			task->tss.edx = 0;
 			task->tss.ebx = 0;
@@ -101,32 +103,28 @@ struct TASK *task_alloc(void)
 			return task;
 		}
 	}
-	return 0; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½S?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½g?ï¿½ï¿½p?ï¿½ï¿½?ï¿½ï¿½ */
+	return 0; /* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½S??¿½?¿½??¿½?¿½??¿½?¿½g??¿½?¿½p??¿½?¿½??¿½?¿½ */
 }
 
 void task_run(struct TASK *task, int level, int priority)
 {
 	if (level < 0) {
-		level = task->level; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ÏX?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½È‚ï¿½ */
+		level = task->level; /* ƒŒƒxƒ‹‚ğ•ÏX‚µ‚È‚¢ */
 	}
 	if (priority > 0) {
 		task->priority = priority;
 	}
 
-	if (task->flags == TASK_RUNNING && task->level != level) { /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿½??ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ì•ÏX */
-		task_remove(task); /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½s?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½flags?ï¿½ï¿½?ï¿½ï¿½1?ï¿½ï¿½É‚È‚ï¿½?ï¿½ï¿½Ì‚Å‰ï¿½?ï¿½ï¿½?ï¿½ï¿½if?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½s?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+	if (task->flags == TASK_RUNNING && task->level != level) { /* “®ì’†‚ÌƒŒƒxƒ‹‚Ì•ÏX */
+		task_remove(task); /* ‚±‚ê‚ğÀs‚·‚é‚Æflags‚Í1‚É‚È‚é‚Ì‚Å‰º‚Ìif‚àÀs‚³‚ê‚é */
 	}
-	if (task->flags != TASK_RUNNING && task->flags != TASK_HDD_USING  && task->flags != TASK_OTHER_WAITING) {
-		/* ?ï¿½ï¿½X?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½[?ï¿½ï¿½v?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½N?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½? */
+	if (task->flags != TASK_RUNNING) {
+		/* ƒXƒŠ[ƒv‚©‚ç‹N‚±‚³‚ê‚éê‡ */
 		task->level = level;
 		task_add(task);
-	}else if(priority == -100 && task->flags == TASK_HDD_USING){
-		task->level = level;
-		task_add(task);
-	}else if(priority == -200 && task->flags == TASK_OTHER_WAITING){
-		task_add(task);
 	}
-	taskctl->lv_change = 1; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½X?ï¿½ï¿½C?ï¿½ï¿½b?ï¿½ï¿½`?ï¿½ï¿½Ì‚Æ‚ï¿½?ï¿½ï¿½ï¿½??ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+
+	taskctl->lv_change = 1; /* Ÿ‰ñƒ^ƒXƒNƒXƒCƒbƒ`‚Ì‚Æ‚«‚ÉƒŒƒxƒ‹‚ğŒ©’¼‚· */
 	return;
 }
 
@@ -135,10 +133,10 @@ void task_remove(struct TASK *task)
 	int i;
 	struct TASKLEVEL *tl = &taskctl->level[task->level];
 
-	/* task?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ç‚ï¿½?ï¿½ï¿½É‚ï¿½?ï¿½ï¿½é‚©?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½T?ï¿½ï¿½?ï¿½ï¿½ */
+	/* task??¿½?¿½??¿½?¿½??¿½?¿½Ç‚ï¿½??¿½?¿½É‚ï¿½??¿½?¿½é‚©??¿½?¿½??¿½?¿½??¿½?¿½T??¿½?¿½??¿½?¿½ */
 	for (i = 0; i < tl->running; i++) {
 		if (tl->tasks[i] == task) {
-			/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½É‚ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+			/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½É‚ï¿½??¿½?¿½??¿½?¿½ */
 			break;
 		}
 	}
@@ -146,15 +144,15 @@ void task_remove(struct TASK *task)
 	tl->running--;
 	taskctl->now_tasks--;
 	if (i < tl->now) {
-		tl->now--; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ì‚ÅA?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½Ä‚ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+		tl->now--; /* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ì‚ÅA??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½?¿½?¿½?¿½??¿½?¿½Ä‚ï¿½??¿½?¿½??¿½?¿½ */
 	}
 	if (tl->now >= tl->running) {
-		/* now?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½È’l?ï¿½ï¿½É‚È‚ï¿½?ï¿½ï¿½Ä‚ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½A?ï¿½ï¿½C?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+		/* now??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½È’l??¿½?¿½É‚È‚ï¿½??¿½?¿½Ä‚ï¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½A??¿½?¿½C??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½ */
 		tl->now = 0;
 	}
-	task->flags = TASK_SLEEPING; /* ?ï¿½ï¿½X?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½[?ï¿½ï¿½v?ï¿½ï¿½?ï¿½ï¿½ */
+	task->flags = TASK_SLEEPING; /* ??¿½?¿½X??¿½?¿½??¿½?¿½??¿½?¿½[??¿½?¿½v??¿½?¿½??¿½?¿½ */
 
-	/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ç‚µ */
+	/* ??¿½?¿½??¿½?¿½??¿½?¿½ç‚µ */
 	for (; i < tl->running; i++) {
 		tl->tasks[i] = tl->tasks[i + 1];
 	}
@@ -165,22 +163,19 @@ void task_sleep(struct TASK *task,int flg)
 {
 	struct TASK *now_task;
 
-	if (task->flags == TASK_RUNNING || flg==TASK_HDD_USING) {
-		/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+	if (task->flags == TASK_RUNNING) {
+		/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½ */
 		now_task = task_now();
-		task_remove(task); /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½s?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½flags?ï¿½ï¿½?ï¿½ï¿½1?ï¿½ï¿½É‚È‚ï¿½ */
+		task_remove(task); /* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½s??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½flags??¿½?¿½??¿½?¿½1??¿½?¿½É‚È‚ï¿½ */
 		if(flg!=TASK_SLEEPING){
-			if(flg == TASK_HDD_USING){
-				start_hdd(task->h_data.flg, task->h_data.in1,task->h_data.in2,task->h_data.in3);
-			}
 			task->flags=flg;
 			taskctl->wait0[taskctl->wait_num]= task;
 			taskctl->wait_num++;
 		}
 		if (task == now_task) {
-			/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½g?ï¿½ï¿½ÌƒX?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½[?ï¿½ï¿½v?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ì‚ÅA?ï¿½ï¿½^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½X?ï¿½ï¿½C?ï¿½ï¿½b?ï¿½ï¿½`?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½K?ï¿½ï¿½v */
+			/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½g??¿½?¿½ÌƒX??¿½?¿½??¿½?¿½??¿½?¿½[??¿½?¿½v??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ì‚ÅA??¿½?¿½^??¿½?¿½X??¿½?¿½N??¿½?¿½X??¿½?¿½C??¿½?¿½b??¿½?¿½`??¿½?¿½??¿½?¿½??¿½?¿½K??¿½?¿½v */
 			task_switchsub();
-			now_task = task_now(); /* ?ï¿½ï¿½İ’ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Å‚ÌA?ï¿½ï¿½u?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½İ‚Ìƒ^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½v?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ä‚ï¿½?ï¿½ï¿½ç‚¤ */
+			now_task = task_now(); /* ??¿½?¿½İ’ï¿½??¿½?¿½??¿½?¿½??¿½?¿½Å‚ÌA??¿½?¿½u??¿½?¿½??¿½?¿½??¿½?¿½İ‚Ìƒ^??¿½?¿½X??¿½?¿½N??¿½?¿½v??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ä‚ï¿½??¿½?¿½ç‚¤ */
 			farjmp(0, now_task->sel);
 		}
 	}
@@ -190,14 +185,14 @@ void task_sleep(struct TASK *task,int flg)
 void task_clean(struct TASK *task){
 	struct TASK *now_task;
 	if (task->flags == TASK_RUNNING) {
-		/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+		/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½ */
 		task_remove(task);
 	}
 	task->flags = TASK_NONUSE;
 	task->priority = 2;
 	task->level = 2;
 	task->pid = -1;
-	//?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ô‚ï¿½??ï¿½ï¿½?ï¿½ï¿½Z?ï¿½ï¿½b?ï¿½ï¿½g
+	//??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ô‚ï¿½???¿½?¿½??¿½?¿½Z??¿½?¿½b??¿½?¿½g
 	task->tss.eflags = 0x00000202; /* IF = 1; */
 	task->tss.eax = 0;
 	task->tss.ecx = 0;
@@ -214,9 +209,9 @@ void task_clean(struct TASK *task){
 	task->tss.iomap = 0x40000000;
 	now_task = task_now();
 	if (task == now_task) {
-		/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½g?ï¿½ï¿½Ìíœ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ì‚ÅA?ï¿½ï¿½^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½X?ï¿½ï¿½C?ï¿½ï¿½b?ï¿½ï¿½`?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½K?ï¿½ï¿½v */
+		/* ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½g??¿½?¿½Ìíœ??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ì‚ÅA??¿½?¿½^??¿½?¿½X??¿½?¿½N??¿½?¿½X??¿½?¿½C??¿½?¿½b??¿½?¿½`??¿½?¿½??¿½?¿½??¿½?¿½K??¿½?¿½v */
 		task_switchsub();
-		now_task = task_now(); /* ?ï¿½ï¿½İ’ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Å‚ÌA?ï¿½ï¿½u?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½İ‚Ìƒ^?ï¿½ï¿½X?ï¿½ï¿½N?ï¿½ï¿½v?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ä‚ï¿½?ï¿½ï¿½ç‚¤ */
+		now_task = task_now(); /* ??¿½?¿½İ’ï¿½??¿½?¿½??¿½?¿½??¿½?¿½Å‚ÌA??¿½?¿½u??¿½?¿½??¿½?¿½??¿½?¿½İ‚Ìƒ^??¿½?¿½X??¿½?¿½N??¿½?¿½v??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½Ä‚ï¿½??¿½?¿½ç‚¤ */
 		farjmp(0, now_task->sel);
 	}
 	return;
@@ -225,10 +220,10 @@ void task_clean(struct TASK *task){
 void task_switchsub(void)
 {
 	int i;
-	/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ôï¿½?ï¿½ï¿½ï¿½??ï¿½ï¿½?ï¿½ï¿½x?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½T?ï¿½ï¿½?ï¿½ï¿½ */
+	/* ??¿½?¿½??¿½?¿½??¿½?¿½Ôï¿½??¿½?¿½?¿½???¿½?¿½??¿½?¿½x??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½T??¿½?¿½??¿½?¿½ */
 	for (i = 0; i < MAX_TASKLEVELS; i++) {
 		if (taskctl->level[i].running > 0) {
-			break; /* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Â‚ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ */
+			break; /* ??¿½?¿½??¿½?¿½??¿½?¿½Â‚ï¿½??¿½?¿½??¿½?¿½??¿½?¿½??¿½?¿½ */
 		}
 	}
 	taskctl->now_lv = i;
@@ -256,7 +251,7 @@ void task_switch(void)
 	return;
 }
 
-int catch_hdd(int flg, int in1,int in2,void* in3){
+void catch_hdd(int flg, int in1,int in2,void* in3){
 	struct TASK *task = task_now();
 	int i;
 	char *s;
@@ -264,64 +259,55 @@ int catch_hdd(int flg, int in1,int in2,void* in3){
 	task->h_data.in1 = in1;
 	task->h_data.in2 = in2;
 	task->h_data.in3 = in3;
-	task->h_data.status = 100;
 	if(taskctl->wait_num==0){
+		start_hdd(flg, in1,in2,in3);
 		putfonts8_asc_sht(sht_win_b[task->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_USING0", 11);
-		task_sleep(task,TASK_HDD_USING);
-		sprintf(s, "return status: %d",task->h_data.status);
-		putfonts8_asc_sht(sht_back, 700, 700, COL8_FFFFFF, COL8_008484, s, 40);
-		return task->h_data.status;
+		task_sleep(task,TASK_HDD_USING);//–{—ˆ‚Í‚±‚Ì‘O‚Éƒn[ƒhƒfƒBƒXƒNˆ—‚ª“ü‚é
+		return;
 	}else{
 		for(i=0;i<taskctl->wait_num;i++){
 			if(taskctl->wait0[i]->flags==TASK_HDD_USING){
 				putfonts8_asc_sht(sht_win_b[task->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_WAITING", 11);
 				task_sleep(task,TASK_HDD_WAITING);
-				return task->h_data.status;
+				return;
 			}
 		}
-	  putfonts8_asc_sht(sht_win_b[task->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_USING2", 11);
-		task_sleep(task,TASK_HDD_USING);
+		putfonts8_asc_sht(sht_win_b[task->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_USING2", 11);
+		start_hdd(task->h_data.flg, task->h_data.in1,task->h_data.in2,task->h_data.in3);
+		task_sleep(task,TASK_HDD_USING);//–{—ˆ‚Í‚±‚Ì‘O‚Éƒn[ƒhƒfƒBƒXƒNˆ—‚ª“ü‚é
 	}
-	return task->h_data.status;
+	return ;
 }
 
-void end_hdd(int status){
-	int i,j;
-	char *s;
+void end_hdd(){
+	int i;
 	struct TASK *task;
-	for(j=0;j<MAX_TASKS;j++){
-		if(taskctl->tasks0[j].flags == TASK_HDD_USING)
-			task = &taskctl->tasks0[j];
-	}
 	if(taskctl->wait_num > 1){
-		//?ï¿½ï¿½Ç‚ï¿½?ï¿½ï¿½É‚ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½Ì‚ï¿½
+		//‚Ç‚±‚É‚¢‚é‚Ì‚©
 		for(i=0;i<taskctl->wait_num;i++){
 				if(taskctl->wait0[i]->flags==TASK_HDD_USING){
 					break;
 				}
 		}
 		taskctl->wait_num--;
-		task = taskctl->wait0[i];
-		task->h_data.status = status;
-		task_run(task,-1,-100);
-		/* ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ç‚µ */
+		task_run(taskctl->wait0[i],-1,-1);
+		/* ‚¸‚ç‚µ */
 		for (; i < taskctl->wait_num; i++) {
 			taskctl->wait0[i] = taskctl->wait0[i+1];
 		}
 		taskctl->wait0[0]->flags=TASK_HDD_USING;
-		//putfonts8_asc_sht(sht_win_b[taskctl->wait0[0]->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_USING3", 11);
+		putfonts8_asc_sht(sht_win_b[taskctl->wait0[0]->pid-3], 24, 28, COL8_000000, COL8_C6C6C6, "HDD_USING3", 11);
 		start_hdd(taskctl->wait0[0]->h_data.flg,taskctl->wait0[0]->h_data.in1,taskctl->wait0[0]->h_data.in2,taskctl->wait0[0]->h_data.in3);
-	}else if (taskctl->wait_num == 1){
+	}else if(taskctl->wait_num == 1){
 		taskctl->wait_num--;
-		//task = taskctl->wait0[0];
-		task->h_data.status = status;
-		task_run(task,-1,-100);
+		task = taskctl->wait0[0];
+		taskctl->wait0[0]= NULL;
+	  task_run(task,-1,-1);
 	}
 	return;
 }
 
 void task_exit(){
-	char *s;
 	struct TASK *task = task_now();
 	task_clean(task);
 }

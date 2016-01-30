@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define KEYCMD_LED		0xed
-struct SHEET *sht_win_b[5], *sht_back;
+struct SHEET *sht_win_b[5], *sht_back,*sht_win_c[2];
 struct MEMMAN *memman;
 struct SHTCTL *shtctl;
 
@@ -30,7 +30,7 @@ void HariMain(void)
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons,*buf_win_b;
+	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons,*buf_win_b,*buf_win_c;;
 	struct SHEET *sht_mouse, *sht_win, *sht_cons;
 	struct TASK *task_a, *task_cons;
 	struct TIMER *timer;
@@ -123,6 +123,14 @@ void HariMain(void)
 		make_window8(buf_win_b, 344, 52, s, 0);
 	}
 
+	for(i=0;i<2;i++){
+	sht_win_c[i] = sheet_alloc(shtctl);
+	buf_win_c = (unsigned char *) memman_alloc_4k(memman, 344 * 52);
+	sheet_setbuf(sht_win_c[i], buf_win_c, 344, 52, -1); /* �����F�Ȃ� */
+	sprintf(s, "task_c");
+	make_window8(buf_win_c, 344, 52, s, 0);
+}
+
 	/* sht_win */
 	sht_win   = sheet_alloc(shtctl);
 	buf_win   = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
@@ -152,8 +160,13 @@ void HariMain(void)
 	sheet_updown(sht_mouse, 3);
 
 	for(i=0;i<5;i++){
-		sheet_slide(sht_win_b[i], 328+100, 116+i*100);
+		sheet_slide(sht_win_b[i], 100, 216+i*100);
 	}
+
+	for(i=0;i<2;i++){
+		sheet_slide(sht_win_c[i], 100, 16+i*100);
+	}
+
 
 	/* ?????L?[?{?[?h??????H?????????????A???????????????? */
 	  fifo32_put(&keycmd, KEYCMD_LED);
@@ -296,10 +309,19 @@ void HariMain(void)
 	  //   }
 	  // }
 	  //
+		struct FIFO32 fifot;
+		struct TIMER *timertt;
+		int fifotbuf[128];
+		fifo32_init(&fifot, 128, fifotbuf, 0);
+		timertt = timer_alloc();
+		timer_init(timertt, &fifo, 99900);
+		timer_settime(timertt, 500);
 
 	after_test:
-	
+
 	for (;;) {
+		sprintf(s, "time: %d",catch_time());
+	  putfonts8_asc_sht(sht_back, 0,160, COL8_FFFFFF, COL8_008484, s, 200);
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
 			/* ?��L?��[?��{?��[?��h?��R?��?��?��g?��?��?��[?��?��?��ɑ�?��?��?��f?��[?��^?��?��?��?��?��?��?��΁A?��?��?��?�� */
 			keycmd_wait = fifo32_get(&keycmd);
@@ -497,26 +519,59 @@ void start_hdd(int flg, int in1,int in2,void* in3){
 	return;
 }
 
+struct TASK *task_c_make(int i){
+	struct TASK *task_c;
+	task_c = task_alloc();
+	task_c->pid = i;
+	task_c->name ="task_c";
+	task_c->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+	task_c->tss.eip = (int) &task_c_main;
+	task_c->tss.es = 1 * 8;
+	task_c->tss.cs = 2 * 8;
+	task_c->tss.ss = 1 * 8;
+	task_c->tss.ds = 1 * 8;
+	task_c->tss.fs = 1 * 8;
+	task_c->tss.gs = 1 * 8;
+	*((int *) (task_c->tss.esp + 4)) = (int) sht_win_c[(i/10)-1];
+	*((int *) (task_c->tss.esp + 8)) = i;
+	return task_c;
+}
+
+struct TASK *task_make_test(int i){
+	struct TASK *task;
+	task = task_alloc();
+	task->pid = i;
+	task->name ="test_task";
+	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+	task->tss.eip = (int) &task_main_test;
+	task->tss.es = 1 * 8;
+	task->tss.cs = 2 * 8;
+	task->tss.ss = 1 * 8;
+	task->tss.ds = 1 * 8;
+	task->tss.fs = 1 * 8;
+	task->tss.gs = 1 * 8;
+	return task;
+}
+
+void task_main_test(int i){
+	for(;;)
+		;
+}
+
 void task_hdd_main(int flg, int in1,int in2,void* in3)
 {
 	struct FIFO32 fifo;
 	struct TIMER *timer;
-	char *s;
 	int fifobuf[128],i;
-	int status;
 	if(flg==0){
-		sprintf(s, "hdd read: %d,%d,%d",in1,in2,(int)in3);
-		putfonts8_asc_sht(sht_back, 600, 560, COL8_FFFFFF, COL8_008484, s, 40);
-		status = ide_read(in1,in2,in3);
+		ide_read(in1,in2,in3);
 	}else if(flg==1){
-		sprintf(s, "hdd write: %d,%d,%d",in1,in2,(int)in3);
-		putfonts8_asc_sht(sht_back, 600, 540, COL8_FFFFFF, COL8_008484, s, 40);
-		status = ide_write(in1,in2,in3);
+		ide_write(in1,in2,in3);
 	}
 	fifo32_init(&fifo, 128, fifobuf, 0);
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 55500);
-	timer_settime(timer, 100);
+	timer_settime(timer, 200);
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
@@ -525,13 +580,40 @@ void task_hdd_main(int flg, int in1,int in2,void* in3)
 			i = fifo32_get(&fifo);
 			io_sti();
 			if (i == 55500) {
-				sprintf(s, "HDD status: %d",status);
-				putfonts8_asc_sht(sht_back, 700, 720, COL8_FFFFFF, COL8_008484, s, 40);
-				stop_hdd(status);//int42
+				end_hdd();//int42
 				task_exit();
 			}
 		}
 	}
+}
+
+void task_c_main(struct SHEET *sht_win_c,int num)
+{
+	struct FIFO32 fifo;
+	struct TIMER *timer_1s;
+	int i, n, fifobuf[128], cnt = 0;
+	char *s;
+	fifo32_init(&fifo, 128, fifobuf, 0);
+	timer_1s = timer_alloc();
+	timer_init(timer_1s, &fifo, 10000);
+	timer_settime(timer_1s, 100);
+
+	for (;;) {
+		io_cli();
+		if (fifo32_status(&fifo) == 0) {
+			io_sti();
+		} else {
+			i = fifo32_get(&fifo);
+			io_sti();
+			if (i == 10000) {
+				cnt++;
+				sprintf(s, "%07d", cnt);
+				putfonts8_asc_sht(sht_win_c, 24, 28, COL8_000000, COL8_C6C6C6, s, 11);
+				timer_settime(timer_1s, 100);
+			}
+		}
+	}
+	task_exit();
 }
 
 void task_b_main(struct SHEET *sht_win_b,int num)
@@ -580,6 +662,7 @@ void task_b_main(struct SHEET *sht_win_b,int num)
 				timer_settime(timer_1s, 100);
 			}else if(i==11100){
 				if(call==0){
+					//書き込みテスト
 					call++;
 					flg=1;
 					in1=20+(num*10);
@@ -587,17 +670,18 @@ void task_b_main(struct SHEET *sht_win_b,int num)
 					for(n=0;n<num;n++){
 						in3[n]=n+(num*100);
 					}
-					test_hdd(flg,in1,in2,in3);
+					catch_hdd(flg,in1,in2,in3);
 					cnt=5;
 					timer_settime(timer_2s, 400);
 				}else{
+					//読み込みテスト
 					call++;
 					flg=0;
 					in1=20+(num*10);
 					in2=num;
-					test_hdd(flg,in1,in2,out);
+					catch_hdd(flg,in1,in2,in3);
 					for(n=0;n<num;n++){
-						sprintf(s,"%d ",out[n]);
+						sprintf(s,"%d ",in3[n]);
 						strcat(out_string,s);
 					}
 				}
