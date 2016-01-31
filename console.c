@@ -223,12 +223,13 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_cd(cons, cmdline);
 	} else if (strncmp(cmdline, "mkdir ", 6) == 0) {
 		cmd_mkdir(cons, cmdline);
-	} else if (strcmp(cmdline, "task_init_test") == 0) {
-		int MAX= 1000,i;
+	} else if (strncmp(cmdline, "task_init_test ",15) == 0) {
+		in=atoi(cmdline+15);
+		int MAX= 4,i;
 		int start,end;
 		start = catch_time();
 		for(i=3;i<MAX;i++){
-			task_make_test(i);
+			task_run(task_make_test(i),in,1);
 		}
 		end = catch_time();
 		sprintf(s,"time:%d\n",end-start);
@@ -549,7 +550,7 @@ void cmd_pause(struct CONSOLE *cons,int in){
 }
 
 void cmd_ps(struct CONSOLE *cons){
-	int i,cnt = 0;
+	int i,cnt = 0,run=0;
 	char *c,*s;
 	for(i=0;i<MAX_TASKS;i++){
 		if(taskctl->tasks0[i].flags != TASK_NONUSE){
@@ -563,6 +564,7 @@ void cmd_ps(struct CONSOLE *cons){
 						break;
 					case TASK_RUNNING:
 						c="RUN";
+						run++;
 						break;
 					case TASK_HDD_WAITING:
 						c="WAIT";
@@ -584,7 +586,7 @@ void cmd_ps(struct CONSOLE *cons){
 				cons_newline(cons);
 		}
 	}
-	sprintf(s,"running tasks:%d\n",taskctl->now_tasks);
+	sprintf(s,"running tasks:%d\n",run);
 	cons_putstr0(cons, s);
 	sprintf(s,"total tasks:%d\n",cnt);
 	cons_putstr0(cons, s);
@@ -722,7 +724,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 			app_task->tss.fs = 1 * 8;
 			app_task->tss.gs = 1 * 8;
 			*((int *) (app_task->tss.esp + 4)) = esp;
-			task_run(app_task,2,2);
+			task_run(app_task,3,2);
 			memman_free_4k(memman, (int) q, segsiz);
 			task_sleep(task,TASK_SLEEPING); //ユーザコマンドのためにコマンド表示を一時的に停止
 		} else {

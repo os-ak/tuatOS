@@ -6,7 +6,7 @@
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
 extern struct SHEET *sht_win_b[5],*sht_back;
-int switch_count;
+unsigned int switch_count;
 
 struct TASK *task_now(void)
 {
@@ -36,6 +36,7 @@ struct TASK *task_init(struct MEMMAN *memman)
 	int i;
 	struct TASK *task, *idle;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
+	switch_count=0;
 
 	taskctl = (struct TASKCTL *) memman_alloc_4k(memman, sizeof (struct TASKCTL));
 	for (i = 0; i < MAX_TASKS; i++) {
@@ -246,6 +247,7 @@ void task_switch(void)
 	new_task = tl->tasks[tl->now];
 	timer_settime(task_timer, new_task->priority);
 	if (new_task != now_task) {
+		switch_count++;
 		farjmp(0, new_task->sel);
 	}
 	return;
