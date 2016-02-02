@@ -27,6 +27,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	timer_init(timer, &task->fifo, 1);
 	timer_settime(timer, 50);
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+	pwd_fd = syscall_open("/", 0);
 
 	/* �v�����v�g�\�� */
 	cons_putchar(&cons, '>', 1);
