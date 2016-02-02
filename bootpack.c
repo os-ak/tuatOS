@@ -144,6 +144,15 @@ void HariMain(void)
 	timer_init(timer, &fifo, 1);
 	timer_settime(timer, 50);
 
+	//system timer
+	struct FIFO32 fifosw;
+	struct TIMER *timersw;
+	int fifoswbuf[128];
+	fifo32_init(&fifosw, 128, fifoswbuf, 0);
+	timersw = timer_alloc();
+	timer_init(timersw, &fifosw, 9999);
+	timer_settime(timersw, 500);
+
 	/* sht_mouse */
 	sht_mouse = sheet_alloc(shtctl);
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
@@ -244,15 +253,6 @@ void HariMain(void)
   }
 
 after_test:
-
-    //タイマー表示
-		struct FIFO32 fifosw;
-		struct TIMER *timersw;
-		int fifoswbuf[128];
-		fifo32_init(&fifosw, 128, fifoswbuf, 0);
-		timersw = timer_alloc();
-		timer_init(timersw, &fifosw, 9999);
-		timer_settime(timersw, 500);
 
 	for (;;) {
 		sprintf(s, "time: %d",catch_time());
