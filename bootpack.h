@@ -444,7 +444,7 @@ void ide_wait_10milsec(unsigned int timeout);
 #define SECTOR_SIZE            512  // 512 Byte
 #define BLOCK_DATA_LEN_SECTORS (BLOCK_DATA_LEN / SECTOR_SIZE)
 #define BLOCK_GROUP_BLOCKS_NUM 16
-#define DIR_MAX_FILES_NUM      16
+#define DIR_MAX_FILES_NUM      1024
 #define MAX_FILENAME_LEN       16
 
 #define ONE_INODE_TYPE_DIR     0x8000
@@ -467,7 +467,7 @@ typedef struct Block {
 } Block;
 
 
-// blocks[i-1]->block_no < blocks[i]->block_no となることが保証される
+// blocks[i-1]->block_no < blocks[i]->block_no 縺ｨ縺ｪ繧九％縺ｨ縺御ｿ晁ｨｼ縺輔ｌ繧・
 typedef struct block_group {
   Block *blocks[BLOCK_GROUP_BLOCKS_NUM];
   struct block_group *next; // NULL or pointer to next BlockGroup
@@ -481,7 +481,7 @@ typedef struct dir_entry {
 
   // d_files[0] = ino of parent
   // d_files[1..DIR_MAX_FILES_NUM-1] = ino of children
-  // d_files は前から詰まっていることが保証される
+  // d_files 縺ｯ蜑阪°繧芽ｩｰ縺ｾ縺｣縺ｦ縺・ｋ縺薙→縺御ｿ晁ｨｼ縺輔ｌ繧・
   unsigned int    d_files[DIR_MAX_FILES_NUM]; // array of ino (of DirEntry or FileEntry)
 } DirEntry;
 
@@ -496,7 +496,6 @@ typedef struct file_entry {
   BlockGroup *block_group;
 
   unsigned short links_count;       // Hard-links count
-  // unsigned int* p_dirty_inoblk;  // inode block dirty flag pointer
 } FileEntry;
 
 
@@ -549,26 +548,6 @@ typedef struct file_descriptor {
 	unsigned int pos;
 } FileDescriptor;
 
-/*
-- SuperFSの初期化
-- Entry の作成 (syscall_create) (絶対パス, ディレクトリかどうか)
-  - ino の確保
-- Entry の削除 (syscall_remove) (パス)
-  - ino の開放
-  - Block の削除 -> BlockGroup の削除 -> one_inode の更新
-  - DirEntry の辻褄合わせ（d_files[]を更新する）
-  - (Links の辻褄合わせ)
-- ファイルの書き込み (syscall_write) (ファイルパス, データ, データのサイズ, 書き換えかどうか)
-  - 書き換えだったら: Block の削除 -> BlockGroup の削除 -> one_inode の更新
-  - BlockGroup を作成 -> Block の確保 -> one_inode の更新
-  - データを Block に書き込み
-- ファイルの読み込み (syscall_read) (ファイルパス, サイズ)
-  - ファイルを読んで返す
-- ファイルリスト (syscall_filelist) (パス)
-  - FSEntry (ただし block_group == NULL)
-- ino -> ファイル名
-*/
-
 /**
  * @brief "create" procedure for block device
  *
@@ -593,11 +572,8 @@ int syscall_create(char *abs_path, unsigned char is_file, unsigned int *return_i
  * @param abs_path
  * @param is_recursive: 1 if recursive, 0 if not recursive
  * @return 0: success, error if others
- *
- * @note abs_path に存在するファイルまたはディレクトリを "データ(ブロック)ごと削除します"
- *       is_recursive: 0 で呼び出した場合に、 `abs_path` がディレクトリを指す場合はエラーを返します
  */
-int syscall_remove(char *abs_path, unsigned char is_recursive);
+int syscall_remove(FileDescriptor *fd, unsigned char is_recursive);
 
 /**
  * @brief create FileDescriptor and returns
@@ -629,53 +605,13 @@ int syscall_read(FileDescriptor *fd, int bytes, int offset, char *result);
 int syscall_write(FileDescriptor *fd, int bytes, char *src);
 
 /**
- * @brief seek FileDescriptor
- * @param fd: FileDescriptor
- * @param offset: offset (see note)
- * @param is_relative: 0 if absolute, others is relative
- * @note if absolute, result `fd`'s position == `offset`
- *       if relative, result `fd`'s position == `current position` + `offset`
- */
-int syscall_seek(FileDescriptor *fd, int offset, char is_relative);
-
-
-/**
  * @brief "remove" file or directory of one-inode(`ino`)
  * @param ino
  * @param is_recursive: 1 if recursive, 0 if not recursive
  * @return 0: success, error if others
  *
- * @note one-inode に存在するファイルまたはディレクトリを "データ(ブロック)ごと削除します"
- *       is_recursive: 0 で呼び出した場合に、 `ino` が指す one-inode がディレクトリを指す場合はエラーを返します
  */
 int remove_fsentry_by_ino(unsigned int ino, unsigned char is_recursive);
-
-/**
- * @brief "write" file located `abs_path`
- *
- * @param abs_path
- * @param data
- * @param data_size: size bytes
- * @param is_overwrite: not used
- * @param return_file_entry: store (FileEntry *) of `abs_path` if success
- * @return 0: success, error if others
- */
-// NOTE: 現時点では1ブロックしか書き込まない
-// int syscall_write(char *abs_path, unsigned char *data, unsigned int data_size, unsigned char is_overwrite, FileEntry **return_file_entry);
-
-/**
- * @brief "read" file located `abs_path` and store into block(s)
- *
- * @param abs_path
- * @param size: size bytes
- * @param offset: offset bytes
- * @param return_file_entry: store (FileEntry *) of `abs_path` if success
- * @return 0: success, error if others
- *
- * @note 読み込むデータの範囲が複数のブロックにまたがる場合は、またがるブロックのデータすべてを読み込みます
- */
-// int syscall_read(char *abs_path, unsigned int size, unsigned int offset, FileEntry **return_file_entry);
-
 /**
  * @brief "get" array of (FSEntry *) located `abs_path`
  *
@@ -683,119 +619,26 @@ int remove_fsentry_by_ino(unsigned int ino, unsigned char is_recursive);
  * @param return_entry: head address of (array of (FSEntry *))
  * @param return_size: length of (array of (FSEntry *))
  * @return 0: success, error if others
- *
- * @note abs_path がファイルを指す場合には FSEntry 1つを返します
- *       abs_path がディレクトリを指す場合には、
- *         特殊ファイル(".", "..") を含めたそのディレクトリにある全ての (FSEntry *) の配列を返します
  */
 int syscall_get_fsentry(FileDescriptor *fd, FSEntry **return_entry, int *return_size);
 
-/**
- * @brief get `previous` inode by inode no
- * @param ino inode no
- * @return one_inode
- */
 struct one_inode* get_prev_inode_by_no(unsigned int ino);
-
-/**
- * @brief get `previous` block by block no
- * @param block_no: block no
- * @return block
- */
 struct Block* get_prev_block_by_no(unsigned int block_no);
 
-/**
- * @brief return unused one-inode number greater than `greater_than`
- * @return ONE_INODE_INO_INVALID if error, others are unused one_inode number
- */
 unsigned int get_unused_one_inode_number(unsigned int greater_than);
-
-/**
- * @brief return unused block number
- * @param from: find unused block with block-no from `from` (including from)
- * @return BLOCK_NO_INVALID if error, others are unused block number
- */
 unsigned int get_unused_blockno(int from);
-
-/**
- * @brief free Block
- * @note this function can't free master_block_buffer (block_no: 0)
- * @return 0: success, error if others
- */
 int free_block(Block *block);
-
-/**
- * @brief free Blocks cointained by BlockGroup and BlockGroups following by block_group
- * @return 0: success, error if others
- */
 int free_block_group(BlockGroup *block_group);
 
 /////
-
-/**
- * @brief get inode by inode no
- * @param ino inode no
- * @return NULL if error, others are one-inode
- */
 struct one_inode* get_inode_by_no(unsigned int ino);
-
-/**
- * @brief get inode by absolute path
- * @param abs_path: absolute path
- * @note if abs_path == "", it works as if abs_path == "/"
- * @return one_inode
- */
 struct one_inode* get_inode_by_path(const char *abs_path);
 
-// Block* get_block_by_file_entry_and_block_index(FileEntry *file_entry, unsigned int block_index);
-
-/**
- * @brief get block by block-no
- * @param blkno: block-no (not lba)
- * @return NULL: error, others are success
- */
 Block* get_block_by_no(unsigned int block_no);
 
-/**
- * @brief get depth of absolute path
- * @param abs_path: absolute path
- * @return depth of `abs_path`
- * @note ex: "/"               : 1
- *           "/hoge"           : 1
- *           "/hoge/fuga/nyaa" : 3
- */
 unsigned int get_path_depth(const char *abs_path);
-
-/**
- * @brief get sub path of absolute path
- * @param abs_path: absolute path
- * @param depth: depth of path
- * @return `subpath`
- * @note ex: "/a/b/c" , 0 -> "a"
- *           "/a/b/c" , 1 -> "b"
- *           "/a/b/c" , 2 -> "c"
- *           "/a/b/c" , 3 -> NULL
- *           "/a/b/c/", 3 -> "" (NOT NULL)
- *           "/"      , 0 -> "" (NOT NULL)
- */
 char *get_subpath(const char *abs_path, unsigned int depth);
-
-/**
- * @brief get part of directory part of absolute path
- * @param abs_path: absolute path
- * @return `part of directory name`
- * @note ex: "/hoge/fuga/nyaa" -> "/hoge/fuga"
- *           "/hoge"           -> "" (NOT NULL)
- */
 char *get_dirname(const char *abs_path);
-
-/**
- * @brief get part of file name of absolute path
- * @param abs_path: absolute path
- * @return `part of file name`
- * @note ex: "/hoge/fuga/nyaa" -> "nyaa"
- *           "/"               -> "" (NOT NULL)
- */
 char *get_filename(const char *abs_path);
 
 

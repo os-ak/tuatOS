@@ -97,7 +97,7 @@ int make_superfs(unsigned char dev_no, unsigned int block_count) {
   unsigned int status;
   // disk を 0 - block_count * BLOCK_DATA_LEN まで zerofill する
   for (i = 0; i < block_count * BLOCK_DATA_LEN_SECTORS; i++) {
-    if ((status = ide_write(i, 1, data))) {
+    if ((status = ide_ata_write_multiple_sector_pio(0, i, 1, data))) {
       return 100 + status; // error: failed data while writing to disk
     }
   }
@@ -240,9 +240,11 @@ Block* get_prev_block_by_no(unsigned int block_no) {
  * @note abs_path なファイルやディレクトリをブロックごと削除する
  *       is_recursize: 0 のときにabs_pathがディレクトリを指すときはエラー
  */
-int syscall_remove(char *abs_path, unsigned char is_recursive) {
+// int syscall_remove(char *abs_path, unsigned char is_recursive) {
+int syscall_remove(FileDescriptor *fd, unsigned char is_recursive) {
 
-  struct one_inode *inode = get_inode_by_path(abs_path);
+  // struct one_inode *inode = get_inode_by_path(abs_path);
+  struct one_inode *inode = fd->inode;
   if (inode == NULL) {
     return 1; // error: one-inode not found
   }
@@ -504,7 +506,7 @@ int syscall_write(FileDescriptor *fd, int bytes, char *src) {
     new_block->dirty    = 1;
 
     // HDD上のアドレス（block_no * BLOCK_DATA_LEN_SECTORS）にdataを BLOCK_DATA_LEN_SECTORS セクタ分 書き込む
-    if ((status = ide_write(block_no * BLOCK_DATA_LEN_SECTORS, BLOCK_DATA_LEN_SECTORS, new_block->block_data))) {
+    if ((status = ide_ata_write_multiple_sector_pio(0, block_no * BLOCK_DATA_LEN_SECTORS, BLOCK_DATA_LEN_SECTORS, new_block->block_data))) {
       return 100 + status; // error: failed data while writing to disk
     }
 
@@ -594,7 +596,7 @@ int syscall_read(FileDescriptor *fd, int bytes, int offset, char *result) {
     block_no = block->block_no;
 
     // HDD上のアドレス（block_no * BLOCK_DATA_LEN_SECTORS）からdataを BLOCK_DATA_LEN_SECTORS セクタ分 読み込む
-    if ((status = ide_read(block_no * BLOCK_DATA_LEN_SECTORS, BLOCK_DATA_LEN_SECTORS, data))) {
+    if ((status = ide_ata_read_multiple_sector_pio(0, block_no * BLOCK_DATA_LEN_SECTORS, BLOCK_DATA_LEN_SECTORS, data))) {
       return 100 + status; // error
     }
 
